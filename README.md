@@ -1,36 +1,41 @@
 # typewriter of secrets — star vault
 
-hey! welcome to my calm, ghibli-inspired retro typewriter web app.  
-write short secrets, lock them with a 4-digit pin, and store them locally.  
+![logo](logo.png)
 
-**coming soon:** an optional login / backup feature so your secrets won't disappear if your browser cache or localstorage gets cleared.
+hey! welcome to my calm, retro typewriter web app.  
+you can write short secrets, lock each one with a 4-digit pin, and keep them safe locally.  
+
+**coming soon:** login/backup feature so your secrets won't disappear if your browser cache or localstorage gets cleared.
+
+---
 
 ---
 
 ## previews
 
-three prepared images:
+to get the retro vibes, check these previews (animated gifs recommended for video feel):
 
-- `preview-normal.png` — default ui (typing area + archive)  
-- `preview-video.png` — same ui with background video  
-- `preview-pin.png` — pin keypad / unlock modal
+- **default ui** (typing area + archive)  
+  ![preview-normal](preview-normal.png)
+- **background video aesthetic** (or gif simulation)  
+  ![preview-video](preview-video.png)
+- **pin security modal**  
+  ![preview-pin](preview-pin.png)
 
-![preview-normal](preview-normal.png)
-![preview-video](preview-video.png)
-![preview-pin](preview-pin.png)
+> note: github markdown can't autoplay videos, so we use images/gifs for aesthetic experience.
 
 ---
 
 ## features
 
 - ✍️ type short secrets (~280 chars)  
-- 🔐 per-secret 4-digit pin encryption (pbkdf2 → aes-gcm)  
+- 🔐 lock each secret with a 4-digit pin  
 - ✨ scrambled glyph preview in archive (mysterious orbs)  
 - 🔓 unlock via keypad modal, burn to delete permanently  
 - 🎵 ambient typing + chime sounds (toggleable)  
-- 🌌 starfield canvas or optional background video (`video.mp4` in root)  
+- 🌌 starfield background simulated in previews (video or gif)  
 - 📦 export/import encrypted archive (json)  
-- 📱 responsive, mobile-first layout
+- 📱 mobile-first, responsive layout
 
 ---
 
@@ -43,40 +48,12 @@ cd typewriter-of-secrets
 # serve locally
 python -m http.server 8080
 # open http://localhost:8080
-````
+security notes
+encryption is local only; 4-digit pins have ~10k combos, pbkdf2 slows brute-force
 
----
+for highly sensitive secrets, consider longer passphrases
 
-## generate previews (puppeteer)
+secrets are stored in localstorage by default
 
-```bash
-npm init -y
-npm i puppeteer
-node thumbs.js http://localhost:8080
-```
 
-produces `preview-normal.png`, `preview-video.png`, `preview-pin.png`.
-
----
-
-## security notes
-
-* encryption is local only; 4-digit pins have \~10k combos, pbkdf2 slows brute-force
-* highly sensitive secrets should use longer passphrases
-* secrets are stored in localstorage by default
-
----
-
-## credits & fonts
-
-* headings: press start 2p
-* body: nunito
-
-```html
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@300;400;700&display=swap" rel="stylesheet">
-```
-
-made with calm vibes by haku ✨
-
-do you want me to do that?
-```
+made with calm vibes  by haku
