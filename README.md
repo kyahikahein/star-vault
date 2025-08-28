@@ -1,42 +1,33 @@
-# typewriter of secrets — star vault
+# TYPEWRITER OF SECRETS — STAR VAULT
 
-<img src="logo.png" alt="logo" width="150" />
+<img src="logo.png" alt="logo" width="120" style="margin-bottom: 10px;" />
 
-hey! welcome to my calm, retro typewriter web app.  
-you can write short secrets, lock each one with a 4-digit pin, and keep them safe locally.  
+welcome to **typewriter of secrets**, a calm, retro-inspired web app where you can write, scramble, and safely store your anonymous secrets.  
+every secret can be protected with a **4-digit pin**, keeping your private thoughts tucked away locally.  
 
-**coming soon:** login/backup feature so your secrets won't disappear if your browser cache or localstorage gets cleared.
-
----
+> coming soon: login/backup feature to make sure your secrets never vanish even if your browser cache is cleared.  
 
 ---
 
-## previews
+## 🔹 PREVIEW
 
-to get the retro vibes, check these previews (recommended video bg mode):
+### 1. MAIN SITE
+type your secrets, scramble them, and watch them float into the archive.  
+![site preview](preview1.png)
 
-- **default ui** (typing area + archive)  
-  ![preview-normal](preview-normal.png)
-- **background video aesthetic**  
-  ![preview-video](preview-video.png)
-- **pin security modal**  
-  ![preview-pin](preview-pin.png)
----
+### 2. VIDEO BACKGROUND MODE
+enjoy a **starry, calm, nostalgic space vibe** while writing your secrets.  
+![video preview](preview2.png)
 
-## features
-
-- ✍️ type short secrets (~500 chars)  
-- 🔐 lock each secret with a 4-digit pin  
-- ✨ scrambled glyph preview in archive (mysterious orbs)  
-- 🔓 unlock via keypad modal, burn to delete permanently  
-- 🎵 ambient typing + chime sounds (toggleable)  
-- 🌌 starfield background simulated in previews (video or gif)  
-- 📦 export/import encrypted archive (json)  
-- 📱 mobile-first, responsive layout
+### 3. PIN SECURITY
+lock each secret with a **4-digit code**, making it visible only to you.  
+![pin preview](preview3.png)
 
 ---
 
-## quickstart (local)
+## ⚡ QUICKSTART (LOCAL)
+
+clone the repo and run it locally:
 
 ```bash
 git clone https://github.com/yourusername/typewriter-of-secrets.git
@@ -44,13 +35,46 @@ cd typewriter-of-secrets
 
 # serve locally
 python -m http.server 8080
-# open http://localhost:8080
-security notes
-encryption is local only; 4-digit pins have ~10k combos, pbkdf2 slows brute-force
+# open in browser
+http://localhost:8080
+````
 
-for highly sensitive secrets, consider longer passphrases
+---
 
-secrets are stored in localstorage by default
+## 🛡 SECURITY NOTES
 
+* **local encryption only** — the 4-digit pins have \~10,000 combinations; pbkdf2 slows brute-force attempts
+* for highly sensitive secrets, consider **longer passphrases**
+* secrets are stored in **localStorage** by default
 
-made with calm vibes  by haku
+> remember: this is meant for **fun and nostalgic experience**, not top-tier security for ultra-sensitive data.
+
+---
+
+## 💾 FEATURES
+
+* retro 80s/90s aesthetic with **Press Start 2P font**
+* **smooth typing animation** with ambient keyboard sound
+* secrets **scrambled** visually and stored locally
+* **pin-protected secrets** to decode only with correct code
+* archive display with floating orbs and subtle glow
+* optional **video background** for calm, nostalgic vibes
+* fully **responsive** for smartphones and tablets
+
+---
+
+## 🌌 AESTHETIC VIBES
+
+the app draws inspiration from:
+
+* calm Japanese web aesthetics
+* retro typewriters and CRT glow
+* starry space backgrounds and gentle motion
+* ghibli-style nostalgic, dreamy vibes
+
+every interaction is designed to feel **soothing, minimal, and immersive**.
+
+---
+
+made with ❤️ by haku ✨
+```
