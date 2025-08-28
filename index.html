@@ -1,0 +1,1533 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<!-- Standard favicon -->
+<link rel="icon" href="logo.png" type="image/png">
+
+<!-- Shortcut icon for older browsers -->
+<link rel="shortcut icon" href="logo.png" type="image/png">
+
+<!-- Apple touch icon (iOS, iPadOS) -->
+<link rel="apple-touch-icon" href="logo.png">
+
+<title>Typewriter of Secrets — Star Vault</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-deep:#030417;
+  --space-indigo:#0b1230;
+  --paper:#F6EFE6;
+  --muted-pink:#C68FA6;
+  --muted-amber:#E6CBA8;
+  --teal:#7ED1C4;
+  --glass: rgba(255,255,255,0.04);
+  --err:#D95763;
+  --orb-gradient: linear-gradient(135deg,#7ED1C4,#C68FA6);
+}
+
+/* Reset & layout */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Nunito",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  background:var(--bg-deep);
+  color:var(--paper);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+
+/* Canvas sits behind content */
+#bgCanvas{ 
+  position:fixed; 
+  inset:0; 
+  z-index:0; 
+  transition: opacity 0.5s ease;
+}
+
+/* Video background (hidden by default) */
+#bgVideo{
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+/* App container with subtle float animation */
+.container{
+  position:relative;
+  z-index:2;
+  width:100%;
+  max-width:1100px;
+  display:grid;
+  grid-template-columns:1fr 380px;
+  gap:22px;
+  align-items:start;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-3px) rotate(0.2deg); }
+  66% { transform: translateY(3px) rotate(-0.2deg); }
+}
+
+/* Enhanced header with glow */
+.header{ 
+  grid-column:1/-1; 
+  text-align:center; 
+  margin-bottom:6px; 
+  animation: titleGlow 4s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(126,209,196,0.3)); }
+  50% { filter: drop-shadow(0 0 20px rgba(126,209,196,0.6)); }
+}
+
+.title{
+  font-family:"Press Start 2P",monospace;
+  color:var(--teal);
+  font-size:18px;
+  text-shadow:0 0 14px rgba(126,209,196,0.12);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.title:hover{
+  transform: scale(1.02);
+  text-shadow:0 0 25px rgba(126,209,196,0.4);
+}
+
+.subtitle{ 
+  color:rgba(246,239,230,0.8); 
+  font-size:13px;
+  margin-top: 8px;
+}
+
+/* Security badge */
+.security-badge{
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(126,209,196,0.1), rgba(198,143,166,0.1));
+  border: 1px solid rgba(126,209,196,0.2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  margin-top: 8px;
+  animation: securityPulse 3s ease-in-out infinite;
+}
+
+@keyframes securityPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(126,209,196,0.1); }
+  50% { box-shadow: 0 0 20px rgba(126,209,196,0.3); }
+}
+
+/* left editor with hover effects */
+.editor{
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:12px;
+  padding:18px;
+  border:1px solid rgba(255,255,255,0.03);
+  box-shadow:0 10px 40px rgba(3,6,14,0.6);
+  transition: all 0.3s ease;
+}
+.editor:hover{
+  transform: translateY(-2px);
+  box-shadow:0 15px 50px rgba(3,6,14,0.8);
+}
+
+.editor .paper{
+  background:linear-gradient(180deg,#fffaf2,#f3ebe0);
+  color:#121225;
+  border-radius:10px;
+  padding:12px;
+  position:relative;
+  box-shadow:0 10px 26px rgba(2,6,12,0.45);
+  transition: all 0.2s ease;
+}
+.editor .paper:focus-within{
+  box-shadow:0 15px 35px rgba(126,209,196,0.15);
+}
+
+.char-counter{
+  position:absolute; 
+  right:10px; 
+  top:-12px; 
+  background:var(--muted-pink); 
+  color:white; 
+  padding:6px 10px;
+  border-radius:8px;
+  font-weight:700;
+  font-size:12px;
+  transition: all 0.2s ease;
+}
+.char-counter.warning{
+  background: var(--err);
+  animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+  0%, 20%, 60%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-8px); }
+  80% { transform: translateY(-4px); }
+}
+
+textarea#secret{
+  width:100%; 
+  height:180px; 
+  resize:none; 
+  border:0; 
+  outline:0; 
+  background:transparent; 
+  color:#0f1724;
+  font-size:15px; 
+  line-height:1.5; 
+  caret-color:transparent; 
+  font-family:inherit;
+  transition: all 0.2s ease;
+}
+textarea#secret:focus{ 
+  caret-color:var(--teal);
+  transform: scale(1.002);
+}
+
+/* Enhanced actions */
+.actions{ 
+  display:flex; 
+  gap:10px; 
+  margin-top:12px; 
+  align-items:center; 
+  flex-wrap:wrap;
+}
+
+.btn{
+  padding:10px 12px; 
+  border-radius:10px; 
+  cursor:pointer; 
+  border:0; 
+  font-weight:700; 
+  font-size:13px;
+  background:rgba(255,255,255,0.02); 
+  color:var(--paper);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:before{
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.btn:hover:before{
+  width: 300px;
+  height: 300px;
+}
+
+.btn:hover{
+  transform: translateY(-2px);
+}
+
+.btn.primary{ 
+  background:linear-gradient(180deg,var(--muted-pink),#b36f90); 
+  color:white; 
+  box-shadow:0 8px 26px rgba(195,120,145,0.12);
+}
+
+.btn.primary:hover{
+  box-shadow:0 12px 35px rgba(195,120,145,0.25);
+}
+
+.btn.ghost{ 
+  background:transparent; 
+  border:1px solid rgba(126,209,196,0.08); 
+  color:var(--teal);
+}
+
+/* Enhanced sidebar */
+.sidebar{
+  background:rgba(255,255,255,0.02); 
+  border-radius:12px; 
+  padding:14px; 
+  border:1px solid rgba(255,255,255,0.03);
+  height:100%;
+  transition: all 0.3s ease;
+}
+.sidebar:hover{
+  transform: translateY(-1px);
+  background:rgba(255,255,255,0.03);
+}
+
+.archive-header{ 
+  display:flex; 
+  justify-content:space-between; 
+  align-items:center; 
+  margin-bottom:10px;
+}
+
+.archive-title{ 
+  font-family:"Press Start 2P"; 
+  color:var(--teal); 
+  font-size:12px;
+}
+
+.orb-grid{ 
+  display:grid; 
+  grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); 
+  gap:12px; 
+  max-height:540px; 
+  overflow:auto; 
+  padding:4px;
+}
+
+/* Enhanced orb with better animations */
+.orb{
+  height:84px; 
+  border-radius:50%; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  cursor:pointer;
+  color:white; 
+  font-family:monospace; 
+  font-size:14px; 
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+  transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background:var(--orb-gradient); 
+  box-shadow:0 10px 30px rgba(0,0,0,0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+.orb:before{
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: rotate(-45deg);
+  transition: all 0.6s ease;
+  opacity: 0;
+}
+
+.orb:hover:before{
+  opacity: 1;
+  animation: shimmer 0.8s ease-in-out;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(-45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(-45deg); }
+}
+
+.orb.read{ 
+  opacity:0.45; 
+  filter:grayscale(.15);
+}
+
+.orb:hover{ 
+  transform:scale(1.1) rotate(5deg);
+  box-shadow:0 15px 40px rgba(0,0,0,0.6);
+}
+
+/* Enhanced modal backdrop */
+.modal-back{ 
+  position:fixed; 
+  inset:0; 
+  display:none; 
+  align-items:center; 
+  justify-content:center; 
+  z-index:40; 
+  background:linear-gradient(rgba(2,4,8,0.5), rgba(2,4,8,0.8));
+  backdrop-filter: blur(8px);
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-back.show{ display:flex }
+
+/* Enhanced modal card */
+.modal{
+  width:92%; 
+  max-width:520px; 
+  background:linear-gradient(180deg,#fffaf2,#f3ebe0); 
+  color:#0f1730; 
+  border-radius:16px; 
+  padding:24px; 
+  box-shadow:0 25px 80px rgba(2,6,14,0.8);
+  transform: scale(0.9);
+  animation: modalSlideIn 0.3s ease forwards;
+}
+
+@keyframes modalSlideIn {
+  to { transform: scale(1); }
+}
+
+.modal h3{ 
+  font-family:"Press Start 2P"; 
+  font-size:14px; 
+  color:var(--muted-pink); 
+  margin-bottom:12px;
+  text-align: center;
+}
+
+/* Enhanced PIN dots */
+.pin-dots{ 
+  display:flex; 
+  gap:12px; 
+  justify-content:center; 
+  margin-top:16px;
+  margin-bottom: 8px;
+}
+
+.dot{ 
+  width:20px; 
+  height:20px; 
+  border-radius:50%; 
+  border:2px solid rgba(12,18,28,0.2); 
+  background:transparent; 
+  display:inline-block;
+  transition: all 0.3s ease;
+}
+
+.dot.filled{ 
+  background:var(--teal); 
+  border-color:var(--teal);
+  box-shadow: 0 0 15px rgba(126,209,196,0.4);
+  animation: dotFill 0.2s ease;
+}
+
+@keyframes dotFill {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Enhanced keypad with visible numbers */
+.pad{
+  display:grid; 
+  grid-template-columns:repeat(3,1fr); 
+  gap:12px; 
+  margin-top:20px; 
+  justify-items:center;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.key{
+  width:80px; 
+  height:60px; 
+  border-radius:16px; 
+  background:linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); 
+  display:flex; 
+  align-items:center; 
+  justify-content:center;
+  font-size:24px; 
+  font-weight:900; 
+  color:#2c3e50;
+  cursor:pointer; 
+  border:2px solid rgba(126,209,196,0.1);
+  box-shadow:0 8px 25px rgba(0,0,0,0.3), inset 0 1px 3px rgba(255,255,255,0.1);
+  transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
+}
+
+.key:hover{
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:0 12px 35px rgba(0,0,0,0.4), 0 0 25px rgba(126,209,196,0.2);
+  border-color: rgba(126,209,196,0.3);
+  background:linear-gradient(145deg, rgba(126,209,196,0.15), rgba(126,209,196,0.05));
+}
+
+.key:active{ 
+  transform:translateY(1px) scale(0.98);
+  box-shadow:0 4px 15px rgba(0,0,0,0.3);
+}
+
+.key.pressed{
+  animation: keyPress 0.2s ease;
+}
+
+@keyframes keyPress {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); background: rgba(126,209,196,0.2); }
+  100% { transform: scale(1); }
+}
+
+/* Error animation */
+.shake{ animation:shake .5s }
+@keyframes shake{
+  10%, 90% { transform: translate3d(-2px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+  40%, 60% { transform: translate3d(6px, 0, 0); }
+}
+
+/* Enhanced scanlines */
+.scanlines{ 
+  position:fixed; 
+  inset:0; 
+  background-image:linear-gradient(rgba(255,255,255,0.002) 1px, transparent 1px); 
+  background-size:100% 4px; 
+  z-index:1; 
+  pointer-events:none; 
+  opacity:.3;
+  animation: scanlineMove 8s linear infinite;
+}
+
+@keyframes scanlineMove {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+/* Background controls */
+.bg-controls{
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+}
+
+.bg-btn{
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bg-btn:hover{
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+}
+
+.bg-btn.active{
+  background: var(--teal);
+  color: var(--bg-deep);
+}
+
+/* Notification improvements */
+.notification{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:linear-gradient(135deg, rgba(126,209,196,0.9), rgba(198,143,166,0.9));
+  color:white;
+  padding:12px 18px;
+  border-radius:12px;
+  z-index:80;
+  box-shadow:0 12px 40px rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+  animation: notificationSlide 0.4s ease;
+  font-weight: 600;
+}
+
+@keyframes notificationSlide {
+  from { 
+    transform: translateX(100%); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateX(0); 
+    opacity: 1; 
+  }
+}
+
+/* Responsive enhancements */
+@media (max-width:980px){
+  .container{ 
+    grid-template-columns:1fr; 
+    animation: none; /* Disable float on mobile for performance */
+  }
+  .orb{ height:72px }
+  .key{ width:70px; height:55px; font-size:20px; }
+  .bg-controls{ top: 10px; right: 10px; }
+}
+
+/* Focus improvements */
+.btn:focus, .key:focus{
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas" aria-hidden="true"></canvas>
+<video id="bgVideo" muted loop playsinline aria-hidden="true">
+  <source src="video.webm" type="video/webm">
+  <source src="video.mp4" type="video/mp4">
+</video>
+
+<!-- Background controls -->
+<div class="bg-controls">
+  <button class="bg-btn active" id="starsBtn">Stars</button>
+  <button class="bg-btn" id="videoBtn">Video</button>
+</div>
+
+<div class="container" role="application" aria-label="Star vault typewriter">
+  <header class="header">
+    <div class="title" id="titleClick">Typewriter of Secrets</div>
+    <div class="subtitle">Write private thoughts — encrypt with a 4-digit PIN. Your secrets stay yours.</div>
+    <div class="security-badge">🔒 End-to-End Encrypted • 256-bit AES • Local Storage Only</div>
+  </header>
+
+  <!-- editor -->
+  <section class="editor" aria-labelledby="editorLabel">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div style="width:84px;height:84px;border-radius:12px;background:linear-gradient(180deg,#051021,#09142a);display:flex;align-items:center;justify-content:center;font-size:30px;transition:transform 0.3s ease" id="typewriterIcon">⌨️</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong id="editorLabel" style="font-family:monospace">Personal Journal</strong>
+          <div style="font-size:13px;color:rgba(246,239,230,0.8)">Safe space • Your thoughts</div>
+        </div>
+
+        <div class="paper">
+          <div class="char-counter" id="charCount">0/500</div>
+          <textarea id="secret" maxlength="500" placeholder="Share your thoughts, dreams, worries, or secrets here... This is your safe space. Everything you write is encrypted before saving and only you can unlock it with your PIN."></textarea>
+        </div>
+
+        <div class="actions" style="margin-top:12px">
+          <button class="btn primary" id="save">🔐 Encrypt & Save</button>
+          <button class="btn" id="clear">Clear</button>
+          <button class="btn" id="export">📁 Export</button>
+          <button class="btn ghost" id="ambientToggle">🎵 Ambient OFF</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- archive -->
+  <aside class="sidebar" aria-labelledby="archiveLabel">
+    <div class="archive-header">
+      <div>
+        <div class="archive-title" id="archiveLabel">Your Vault</div>
+        <div style="font-size:13px;color:rgba(246,239,230,0.8)" id="archiveCount">0 secrets</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="clearAll">Clear All</button>
+      </div>
+    </div>
+
+    <div class="orb-grid" id="orbGrid" aria-live="polite"></div>
+  </aside>
+</div>
+
+<!-- PIN SET modal -->
+<div class="modal-back" id="setModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3>🔐 Create Your Secret PIN</h3>
+    <div style="color:rgba(12,18,28,0.7);margin-bottom:16px;text-align:center;">Choose a 4-digit code to protect this secret. Make it memorable but unique!</div>
+    
+    <div class="pin-dots" id="setDots">
+      <span class="dot" id="sd0"></span>
+      <span class="dot" id="sd1"></span>
+      <span class="dot" id="sd2"></span>
+      <span class="dot" id="sd3"></span>
+    </div>
+
+    <div class="pad" id="setPad" aria-label="PIN entry keypad"></div>
+
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:20px">
+      <button class="btn" id="setClear">Clear</button>
+      <button class="btn primary" id="setConfirm">✨ Encrypt Secret</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN ENTER modal -->
+<div class="modal-back" id="enterModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3>🗝️ Enter Your PIN</h3>
+    <div style="color:rgba(12,18,28,0.7);text-align:center;" id="enterHint">Enter your 4-digit PIN to unlock this secret.</div>
+
+    <div class="pin-dots" id="enterDots">
+      <span class="dot" id="ed0"></span>
+      <span class="dot" id="ed1"></span>
+      <span class="dot" id="ed2"></span>
+      <span class="dot" id="ed3"></span>
+    </div>
+
+    <div class="pad" id="enterPad" aria-label="PIN entry keypad"></div>
+
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:20px">
+      <button class="btn" id="enterClear">Clear</button>
+      <button class="btn primary" id="enterSubmit">🔓 Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW decrypted -->
+<div class="modal-back" id="viewModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3>📖 Your Secret</h3>
+    <div style="color:rgba(12,18,28,0.7);margin-bottom:12px;text-align:center;">Encrypted version:</div>
+    <div style="font-family:monospace;background:#f8f8f8;padding:12px;border-radius:8px;min-height:60px;display:flex;align-items:center;justify-content:center;word-break:break-word;font-size:14px;border:1px solid #e0e0e0;" id="viewScrambled"></div>
+    <div style="margin-top:16px;padding:16px;background:linear-gradient(135deg,#eef8f6,#e6f3f0);border-left:4px solid var(--teal);border-radius:8px;display:none;white-space:pre-wrap;line-height:1.6;" id="viewDecoded"></div>
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:20px">
+      <button class="btn primary" id="closeView">Close</button>
+      <button class="btn" id="burn" style="background:linear-gradient(135deg,#ff6b6b,#d63031);color:white;">🔥 Burn Forever</button>
+    </div>
+  </div>
+</div>
+
+<div class="scanlines" aria-hidden="true"></div>
+
+<script>
+/* ---------------------------
+   Utilities & Storage
+   --------------------------- */
+const STORAGE_KEY = 'starvault_archive_v2';
+const GLYPHS = ['◆','◇','◈','◉','◊','○','●','◐','◑','◒','◓','□','■','▢','▣','▤','▥','▦','▧','▨','▩','▪','▫','▬','▭','▮','▯','▰','▱','△','▲','▴','▵','▶','▷','▸','▹','►','▻','▼','▽','▾','▿','◀','◁','◂','◃','◄','◅'];
+
+function loadArchive(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){return[];} }
+function saveArchive(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+function id(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,9); }
+function scramble(text, seed = Date.now()){
+  const bytes = new TextEncoder().encode(text);
+  let out=''; for(let i=0;i<bytes.length;i++){ out += GLYPHS[(bytes[i]+seed+i)%GLYPHS.length]; } return out;
+}
+
+/* --- base64 helpers --- */
+function bufToB64(buf){ const u = new Uint8Array(buf); let s=''; for(let i=0;i<u.length;i++) s += String.fromCharCode(u[i]); return btoa(s); }
+function b64ToBuf(b64){ const s = atob(b64); const u = new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u.buffer; }
+
+/* ---------------------------
+   WebCrypto: PBKDF2 -> AES-GCM
+   --------------------------- */
+async function keyMat(pin){ return crypto.subtle.importKey('raw', new TextEncoder().encode(pin), {name:'PBKDF2'}, false, ['deriveKey']); }
+async function deriveKey(km, salt){
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+async function encrypt(plain, pin){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const km = await keyMat(pin);
+  const key = await deriveKey(km, salt);
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(plain));
+  return { ct: bufToB64(ct), salt: bufToB64(salt.buffer), iv: bufToB64(iv.buffer) };
+}
+async function decrypt(ctB64, pin, saltB64, ivB64){
+  const salt = new Uint8Array(b64ToBuf(saltB64));
+  const iv = new Uint8Array(b64ToBuf(ivB64));
+  const km = await keyMat(pin);
+  const key = await deriveKey(km, salt);
+  const plainBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, b64ToBuf(ctB64));
+  return new TextDecoder().decode(plainBuf);
+}
+
+/* ---------------------------
+   UI Refs
+   --------------------------- */
+const secretEl = document.getElementById('secret');
+const charCount = document.getElementById('charCount');
+const orbGrid = document.getElementById('orbGrid');
+const archiveCount = document.getElementById('archiveCount');
+
+const setModal = document.getElementById('setModal');
+const setPad = document.getElementById('setPad');
+const setDots = [ 'sd0','sd1','sd2','sd3' ].map(id=>document.getElementById(id));
+const setConfirm = document.getElementById('setConfirm'), setClear = document.getElementById('setClear');
+
+const enterModal = document.getElementById('enterModal');
+const enterPad = document.getElementById('enterPad');
+const enterDots = [ 'ed0','ed1','ed2','ed3' ].map(id=>document.getElementById(id));
+const enterSubmit = document.getElementById('enterSubmit'), enterClear = document.getElementById('enterClear');
+const enterHint = document.getElementById('enterHint');
+
+const viewModal = document.getElementById('viewModal');
+const viewScrambled = document.getElementById('viewScrambled');
+const viewDecoded = document.getElementById('viewDecoded');
+const closeView = document.getElementById('closeView'), burnBtn = document.getElementById('burn');
+
+/* buttons */
+const saveBtn = document.getElementById('save'), clearBtn = document.getElementById('clear'), exportBtn = document.getElementById('export'), ambientToggle = document.getElementById('ambientToggle');
+const clearAllBtn = document.getElementById('clearAll');
+
+/* background controls */
+const starsBtn = document.getElementById('starsBtn');
+const videoBtn = document.getElementById('videoBtn');
+const bgVideo = document.getElementById('bgVideo');
+const bgCanvas = document.getElementById('bgCanvas');
+
+/* ---------------------------
+   State
+   --------------------------- */
+let pendingText = '';
+let setPin = '';
+let enterPin = '';
+let selectedId = null;
+let audioCtx = null;
+let ambientOsc = null;
+let ambientOn = false;
+let audioEnabled = true;
+let backgroundMode = 'stars'; // 'stars' or 'video'
+
+/* ---------------------------
+   Enhanced Sounds (WebAudio)
+   --------------------------- */
+function ensureAudio(){ 
+  if(!audioCtx) {
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)(); 
+    // Resume if needed (for mobile)
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+  }
+}
+
+function soundType(){
+  if(!audioEnabled) return;
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type='triangle'; 
+  o.frequency.value = 800 + Math.random()*200;
+  g.gain.setValueAtTime(0.0001,t); 
+  g.gain.exponentialRampToValueAtTime(0.04,t+0.008); 
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.15);
+  o.connect(g); g.connect(audioCtx.destination); 
+  o.start(); o.stop(t+0.18);
+}
+
+function soundChime(){
+  if(!audioEnabled) return;
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type='sine'; 
+  o.frequency.setValueAtTime(440,t); 
+  o.frequency.exponentialRampToValueAtTime(880,t+0.3);
+  g.gain.setValueAtTime(0.0001,t); 
+  g.gain.linearRampToValueAtTime(0.08,t+0.02); 
+  g.gain.exponentialRampToValueAtTime(0.0001,t+1.2);
+  o.connect(g); g.connect(audioCtx.destination); 
+  o.start(); o.stop(t+1.3);
+}
+
+function soundError(){
+  if(!audioEnabled) return;
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type='square'; 
+  o.frequency.value = 180;
+  g.gain.setValueAtTime(0.0001,t); 
+  g.gain.linearRampToValueAtTime(0.08,t+0.01); 
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.8);
+  o.connect(g); g.connect(audioCtx.destination); 
+  o.start(); o.stop(t+0.8);
+}
+
+function soundKeyPress(){
+  if(!audioEnabled) return;
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type='sine'; 
+  o.frequency.value = 1200 + Math.random()*400;
+  g.gain.setValueAtTime(0.0001,t); 
+  g.gain.exponentialRampToValueAtTime(0.06,t+0.005); 
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.08);
+  o.connect(g); g.connect(audioCtx.destination); 
+  o.start(); o.stop(t+0.1);
+}
+
+function toggleAmbient(on){
+  ensureAudio();
+  ambientOn = on;
+  if(on){
+    ambientOsc = audioCtx.createOscillator(); 
+    const g = audioCtx.createGain();
+    ambientOsc.type = 'sine'; 
+    ambientOsc.frequency.value = 32; 
+    g.gain.value = 0.012;
+    ambientOsc.connect(g); 
+    g.connect(audioCtx.destination); 
+    ambientOsc.start();
+  } else {
+    if(ambientOsc){ 
+      try{ ambientOsc.stop(); }catch(e){} 
+      ambientOsc.disconnect(); 
+      ambientOsc = null; 
+    }
+  }
+}
+
+/* ---------------------------
+   Enhanced Starfield with more movement
+   --------------------------- */
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let stars = [], nebulae = [], w=0,h=0;
+
+function resize(){ 
+  w = innerWidth; 
+  h = innerHeight; 
+  canvas.width = w; 
+  canvas.height = h; 
+}
+window.addEventListener('resize', resize); 
+resize();
+
+function spawnStars(n=200){
+  stars = [];
+  for(let i=0;i<n;i++){
+    stars.push({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      r: Math.random()*2.2 + 0.3,
+      speed: 0.05 + Math.random()*0.4,
+      hue: (Math.random()>0.5)?185:300,
+      alpha: 0.06 + Math.random()*0.6,
+      twinkle: Math.random()*Math.PI*2,
+      drift: (Math.random()-0.5)*0.2
+    });
+  }
+}
+
+function spawnNebulae(n=8){
+  nebulae = [];
+  for(let i=0;i<n;i++){
+    nebulae.push({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      size: 100 + Math.random()*300,
+      hue: 185 + Math.random()*30,
+      alpha: 0.02 + Math.random()*0.06,
+      drift: (Math.random()-0.5)*0.1,
+      pulse: Math.random()*Math.PI*2
+    });
+  }
+}
+
+spawnStars(180);
+spawnNebulae(6);
+
+let time = 0;
+function drawBG(){
+  if(backgroundMode !== 'stars') {
+    requestAnimationFrame(drawBG);
+    return;
+  }
+  
+  ctx.clearRect(0,0,w,h);
+  
+  // Dynamic galaxy gradient
+  const gx = ctx.createRadialGradient(w*0.3, h*0.3, 60, w*0.3, h*0.3, Math.max(w,h)*0.8);
+  gx.addColorStop(0, 'rgba(126,209,196,0.06)');
+  gx.addColorStop(0.4, 'rgba(198,143,166,0.04)');
+  gx.addColorStop(1, 'transparent');
+  ctx.fillStyle = gx; 
+  ctx.fillRect(0,0,w,h);
+
+  // Draw nebulae
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  for(const n of nebulae){
+    n.x += n.drift;
+    n.pulse += 0.01;
+    if(n.x > w+n.size) n.x = -n.size;
+    if(n.x < -n.size) n.x = w+n.size;
+    
+    const alpha = n.alpha * (0.7 + 0.3*Math.sin(n.pulse));
+    const gr = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.size);
+    gr.addColorStop(0, `hsla(${n.hue},60%,70%,${alpha})`);
+    gr.addColorStop(1, 'transparent');
+    ctx.fillStyle = gr;
+    ctx.fillRect(n.x-n.size, n.y-n.size, n.size*2, n.size*2);
+  }
+  ctx.restore();
+
+  // Enhanced stars with twinkling
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for(const s of stars){
+    s.y -= s.speed;
+    s.x += Math.sin((s.y + time*0.03)*0.001)*0.8 + s.drift;
+    s.twinkle += 0.05 + Math.random()*0.02;
+    
+    if(s.y < -15) { 
+      s.y = h + 15; 
+      s.x = Math.random()*w; 
+    }
+    if(s.x < -10) s.x = w+10;
+    if(s.x > w+10) s.x = -10;
+    
+    const twinkleAlpha = s.alpha * (0.6 + 0.4*Math.sin(s.twinkle));
+    const starSize = s.r * (0.8 + 0.2*Math.sin(s.twinkle*1.3));
+    
+    ctx.beginPath();
+    ctx.fillStyle = `hsla(${s.hue},70%,70%,${twinkleAlpha})`;
+    ctx.shadowBlur = 12 + 6*Math.sin(s.twinkle); 
+    ctx.shadowColor = `hsla(${s.hue},70%,70%,${twinkleAlpha*0.8})`;
+    ctx.arc(s.x, s.y, starSize, 0, Math.PI*2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  ctx.restore();
+
+  // Enhanced shooting stars
+  if(Math.random() < 0.012){
+    const sx = Math.random()*w, sy = Math.random()*h*0.6;
+    const len = 150 + Math.random()*350;
+    const ang = -0.3 - Math.random()*0.4;
+    const g = ctx.createLinearGradient(sx,sy, sx+len*Math.cos(ang), sy+len*Math.sin(ang));
+    g.addColorStop(0, 'rgba(255,255,255,0.95)'); 
+    g.addColorStop(0.7, 'rgba(126,209,196,0.6)'); 
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = g; 
+    ctx.lineWidth = 2.2; 
+    ctx.beginPath();
+    ctx.moveTo(sx,sy); 
+    ctx.lineTo(sx+len*Math.cos(ang), sy+len*Math.sin(ang)); 
+    ctx.stroke();
+  }
+
+  time += 1;
+  requestAnimationFrame(drawBG);
+}
+
+/* ---------------------------
+   Background Controls
+   --------------------------- */
+function switchToStars(){
+  backgroundMode = 'stars';
+  bgCanvas.style.opacity = '1';
+  bgVideo.style.opacity = '0';
+  bgVideo.pause();
+  starsBtn.classList.add('active');
+  videoBtn.classList.remove('active');
+}
+
+function switchToVideo(){
+  backgroundMode = 'video';
+  bgCanvas.style.opacity = '0';
+  bgVideo.style.opacity = '1';
+  bgVideo.play();
+  videoBtn.classList.add('active');
+  starsBtn.classList.remove('active');
+}
+
+starsBtn.addEventListener('click', switchToStars);
+videoBtn.addEventListener('click', switchToVideo);
+
+// Start with stars
+drawBG();
+
+/* ---------------------------
+   Archive rendering with animations
+   --------------------------- */
+function render(){
+  const arr = loadArchive();
+  orbGrid.innerHTML = '';
+  archiveCount.textContent = `${arr.length} secret${arr.length !== 1 ? 's' : ''}`;
+  
+  arr.forEach((s, index)=>{
+    const d = document.createElement('div');
+    d.className = 'orb' + (s.read? ' read': '');
+    d.textContent = s.scrambled.slice(0,6);
+    d.title = `Created: ${new Date(s.createdAt).toLocaleString()}\nClick to unlock`;
+    d.onclick = ()=> promptUnlock(s.id);
+    d.style.animationDelay = `${index * 0.1}s`;
+    orbGrid.appendChild(d);
+    
+    // Animate in
+    setTimeout(()=>{
+      d.style.animation = 'orbFadeIn 0.5s ease forwards';
+    }, index * 100);
+  });
+}
+
+// Add orbFadeIn animation
+const style = document.createElement('style');
+style.textContent = `
+@keyframes orbFadeIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.8) translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+}
+`;
+document.head.appendChild(style);
+
+render();
+
+/* ---------------------------
+   Enhanced Editor behavior
+   --------------------------- */
+secretEl.addEventListener('input', ()=>{ 
+  const count = secretEl.value.length;
+  charCount.textContent = `${count}/500`;
+  
+  // Warning color when approaching limit
+  if(count > 450){
+    charCount.classList.add('warning');
+  } else {
+    charCount.classList.remove('warning');
+  }
+});
+
+// Enhanced focus behavior
+document.addEventListener('click', e=>{
+  if(e.target.closest('.modal') || e.target.closest('.pad') || e.target.closest('.btn') || e.target.closest('.orb') || e.target.closest('.bg-controls')) return;
+  secretEl.focus();
+});
+
+// Enhanced typing sounds and interactions
+secretEl.addEventListener('keydown', e=>{
+  if(e.key.length===1) {
+    soundType();
+    // Subtle typewriter icon animation
+    const icon = document.getElementById('typewriterIcon');
+    icon.style.transform = 'scale(1.05)';
+    setTimeout(()=> icon.style.transform = 'scale(1)', 100);
+  }
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter') saveBtn.click();
+});
+
+// Title interaction
+document.getElementById('titleClick').addEventListener('click', ()=>{
+  const messages = [
+    "✨ Your thoughts are safe here",
+    "🔐 Bank-level encryption protects you", 
+    "🌟 Write freely, dream safely",
+    "💫 This is your personal sanctuary"
+  ];
+  notify(messages[Math.floor(Math.random() * messages.length)]);
+});
+
+/* ---------------------------
+   Enhanced PIN pad builder
+   --------------------------- */
+function buildPad(container, handler){
+  container.innerHTML = '';
+  const layout = ['1','2','3','4','5','6','7','8','9','*','0','#'];
+  
+  layout.forEach((d, index)=>{
+    const b = document.createElement('div');
+    b.className = 'key';
+    b.textContent = d;
+    b.setAttribute('tabindex', '0');
+    b.setAttribute('role', 'button');
+    b.setAttribute('aria-label', `Digit ${d}`);
+    
+    const handlePress = ()=> {
+      if(['*','#'].includes(d)) return; // Only numbers for PIN
+      b.classList.add('pressed');
+      setTimeout(()=> b.classList.remove('pressed'), 200);
+      soundKeyPress();
+      handler(d, b);
+    };
+    
+    b.addEventListener('click', handlePress);
+    b.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        handlePress();
+      }
+    });
+    
+    // Skip * and # for PIN entry (keep layout but disable)
+    if(['*','#'].includes(d)){
+      b.style.opacity = '0.3';
+      b.style.cursor = 'not-allowed';
+    }
+    
+    container.appendChild(b);
+    
+    // Animate in
+    setTimeout(()=>{
+      b.style.animation = 'keyFadeIn 0.3s ease forwards';
+    }, index * 50);
+  });
+}
+
+// Add keyFadeIn animation
+style.textContent += `
+@keyframes keyFadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(15px) scale(0.9); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+`;
+
+/* ---------------------------
+   Enhanced modal flows
+   --------------------------- */
+saveBtn.addEventListener('click', ()=>{
+  const txt = secretEl.value.trim();
+  if(!txt){ 
+    notify('✍️ Write something first!'); 
+    secretEl.focus();
+    return; 
+  }
+  pendingText = txt;
+  setPin = '';
+  setDots.forEach(dot=>dot.classList.remove('filled'));
+  setModal.classList.add('show'); 
+  setModal.style.display='flex'; 
+  setModal.setAttribute('aria-hidden','false');
+  buildPad(setPad, (d,el)=>{ 
+    if(setPin.length>=4) return; 
+    setPin += d; 
+    setDots[setPin.length-1].classList.add('filled'); 
+  });
+});
+
+setClear.addEventListener('click', ()=>{ 
+  setPin=''; 
+  setDots.forEach(dot=>dot.classList.remove('filled')); 
+});
+
+setConfirm.addEventListener('click', async ()=>{
+  if(setPin.length !== 4){ 
+    soundError(); 
+    setPad.classList.add('shake'); 
+    setTimeout(()=>setPad.classList.remove('shake'),500); 
+    notify('🔢 PIN must be exactly 4 digits'); 
+    return; 
+  }
+  
+  setModal.classList.remove('show'); 
+  setModal.style.display='none'; 
+  setModal.setAttribute('aria-hidden','true');
+  
+  // Show encrypting message
+  notify('🔐 Encrypting your secret...');
+  
+  await doEncryptSave(pendingText, setPin);
+  pendingText = ''; 
+  setPin = '';
+});
+
+function promptUnlock(id){
+  selectedId = id;
+  enterPin = '';
+  enterDots.forEach(dot=>dot.classList.remove('filled'));
+  enterHint.textContent = 'Enter your 4-digit PIN to unlock this secret.';
+  enterHint.style.color = 'rgba(12,18,28,0.7)';
+  enterModal.classList.add('show'); 
+  enterModal.style.display='flex'; 
+  enterModal.setAttribute('aria-hidden','false');
+  buildPad(enterPad, (d,el)=>{ 
+    if(enterPin.length>=4) return; 
+    enterPin += d; 
+    enterDots[enterPin.length-1].classList.add('filled');
+  });
+}
+
+enterClear.addEventListener('click', ()=>{ 
+  enterPin=''; 
+  enterDots.forEach(dot=>dot.classList.remove('filled')); 
+});
+
+enterSubmit.addEventListener('click', ()=>{ 
+  if(enterPin.length!==4){ 
+    soundError(); 
+    notify('🔢 Enter all 4 digits');
+    return; 
+  } 
+  tryDecrypt(enterPin); 
+});
+
+/* Modal close on outside click */
+document.querySelectorAll('.modal-back').forEach(m=>{
+  m.addEventListener('click', (e)=>{
+    if(e.target === m){
+      m.classList.remove('show'); 
+      m.style.display='none'; 
+      m.setAttribute('aria-hidden','true');
+      setPin=''; 
+      enterPin='';
+      setDots.forEach(d=>d.classList.remove('filled')); 
+      enterDots.forEach(d=>d.classList.remove('filled'));
+    }
+  });
+});
+
+/* ---------------------------
+   Enhanced Encrypt & Save
+   --------------------------- */
+async function doEncryptSave(plainText, pin){
+  try{
+    const {ct, salt, iv} = await encrypt(plainText, pin);
+    const newS = { 
+      id: id(), 
+      ciphertext: ct, 
+      salt, 
+      iv, 
+      scrambled: scramble(plainText), 
+      createdAt: Date.now(), 
+      read:false, 
+      failed:0, 
+      lockUntil:0 
+    };
+    const arr = loadArchive(); 
+    arr.unshift(newS); 
+    saveArchive(arr); 
+    render();
+    secretEl.value=''; 
+    charCount.textContent='0/500';
+    soundChime(); 
+    notify('✨ Secret encrypted and saved safely!');
+  } catch(e){ 
+    console.error(e); 
+    soundError(); 
+    notify('❌ Encryption failed. Please try again.'); 
+  }
+}
+
+/* ---------------------------
+   Enhanced Try decrypt
+   --------------------------- */
+async function tryDecrypt(pin){
+  const arr = loadArchive(); 
+  const idx = arr.findIndex(s=>s.id===selectedId);
+  if(idx===-1){ 
+    notify('❌ Secret not found'); 
+    return; 
+  }
+  
+  const secret = arr[idx];
+  const now = Date.now();
+  
+  // Check lockout
+  if(secret.lockUntil && secret.lockUntil > now){
+    const secs = Math.ceil((secret.lockUntil - now)/1000);
+    enterHint.textContent = `🔒 Locked for ${secs} more seconds`;
+    enterHint.style.color = 'var(--err)';
+    soundError(); 
+    return;
+  }
+  
+  try{
+    const plain = await decrypt(secret.ciphertext, pin, secret.salt, secret.iv);
+    
+    // Success!
+    secret.read = true; 
+    secret.failed = 0; 
+    secret.lockUntil = 0; 
+    saveArchive(arr); 
+    render();
+    
+    enterModal.classList.remove('show'); 
+    enterModal.style.display='none'; 
+    enterModal.setAttribute('aria-hidden','true');
+    
+    viewScrambled.textContent = secret.scrambled; 
+    viewDecoded.textContent = plain; 
+    viewDecoded.style.display='block';
+    viewModal.classList.add('show'); 
+    viewModal.style.display='flex'; 
+    viewModal.setAttribute('aria-hidden','false');
+    
+    soundChime();
+    notify('🔓 Secret unlocked!');
+    
+  } catch(e){
+    // Wrong PIN
+    secret.failed = (secret.failed||0) + 1;
+    
+    if(secret.failed >= 3){
+      const lockSeconds = 10 * Math.pow(2, secret.failed-3);
+      secret.lockUntil = Date.now() + lockSeconds*1000;
+      enterHint.textContent = `🚫 Wrong PIN! Locked for ${lockSeconds} seconds`;
+      enterHint.style.color = 'var(--err)';
+    } else {
+      const remaining = 3 - secret.failed;
+      enterHint.textContent = `❌ Wrong PIN. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining`;
+      enterHint.style.color = 'var(--err)';
+    }
+    
+    saveArchive(arr);
+    enterPin=''; 
+    enterDots.forEach(d=>d.classList.remove('filled'));
+    soundError();
+    
+    enterPad.classList.add('shake'); 
+    setTimeout(()=>enterPad.classList.remove('shake'),400);
+  }
+}
+
+/* View modal controls */
+closeView.addEventListener('click', ()=>{ 
+  viewModal.classList.remove('show'); 
+  viewModal.style.display='none'; 
+  viewModal.setAttribute('aria-hidden','true'); 
+  viewDecoded.style.display='none'; 
+});
+
+burnBtn.addEventListener('click', ()=>{ 
+  if(!confirm('🔥 Are you absolutely sure you want to permanently delete this secret? This cannot be undone!')){ 
+    return; 
+  }
+  
+  const arr = loadArchive().filter(s=>s.id !== selectedId); 
+  saveArchive(arr); 
+  render(); 
+  viewModal.classList.remove('show'); 
+  viewModal.style.display='none'; 
+  notify('🔥 Secret burned forever'); 
+});
+
+/* ---------------------------
+   Enhanced utility functions
+   --------------------------- */
+exportBtn.addEventListener('click', ()=>{
+  const arr = loadArchive();
+  if(arr.length === 0){
+    notify('📭 No secrets to export yet!');
+    return;
+  }
+  
+  const payload = { 
+    exportedAt: new Date().toISOString(), 
+    appVersion: 'Star Vault v2.0',
+    totalSecrets: arr.length,
+    secrets: arr 
+  };
+  
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob); 
+  const a = document.createElement('a'); 
+  a.href = url; 
+  a.download = `star-vault-backup-${new Date().toISOString().split('T')[0]}.json`; 
+  a.click();
+  
+  setTimeout(()=>URL.revokeObjectURL(url),500); 
+  notify('📁 Encrypted backup exported!');
+});
+
+clearAllBtn.addEventListener('click', ()=>{ 
+  if(!confirm('🗑️ Delete ALL secrets permanently? This cannot be undone!')) return;
+  if(!confirm('⚠️ Last chance - really delete everything?')) return;
+  
+  localStorage.removeItem(STORAGE_KEY); 
+  render(); 
+  notify('🧹 All secrets cleared'); 
+});
+
+clearBtn.addEventListener('click', ()=>{ 
+  if(secretEl.value.trim()){
+    if(!confirm('Clear your current writing?')) return;
+  }
+  secretEl.value=''; 
+  charCount.textContent='0/500';
+  secretEl.focus();
+});
+
+ambientToggle.addEventListener('click', ()=>{
+  ambientOn = !ambientOn;
+  ambientToggle.textContent = ambientOn ? '🎵 Ambient ON' : '🎵 Ambient OFF';
+  ambientToggle.style.background = ambientOn ? 'linear-gradient(135deg,#2b5864,#1b3c42)' : '';
+  ambientToggle.style.color = ambientOn ? 'white' : '';
+  toggleAmbient(ambientOn);
+  notify(ambientOn ? '🎵 Ambient sounds on' : '🔇 Ambient sounds off');
+});
+
+/* ---------------------------
+   Enhanced notification system
+   --------------------------- */
+function notify(msg, duration = 3000){
+  const n = document.createElement('div'); 
+  n.textContent = msg;
+  n.className = 'notification';
+  document.body.appendChild(n); 
+  
+  setTimeout(()=> {
+    n.style.animation = 'notificationSlide 0.4s ease reverse';
+    setTimeout(()=>n.remove(), 400);
+  }, duration);
+}
+
+/* ---------------------------
+   Initialize & Final Setup
+   --------------------------- */
+function initialize(){
+  // Build initial pads
+  buildPad(setPad, ()=>{});
+  buildPad(enterPad, ()=>{});
+  
+  // Focus on load
+  setTimeout(()=> {
+    secretEl.focus();
+    notify('✨ Welcome to your secure sanctuary');
+  }, 800);
+  
+  // Render existing secrets
+  render();
+  
+  // Add some welcoming touches
+  const typewriterIcon = document.getElementById('typewriterIcon');
+  typewriterIcon.addEventListener('click', ()=>{
+    notify('⌨️ Your digital typewriter awaits...');
+  });
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e)=>{
+  if(e.ctrlKey || e.metaKey){
+    if(e.key === 's'){
+      e.preventDefault();
+      saveBtn.click();
+    } else if(e.key === 'e'){
+      e.preventDefault();
+      exportBtn.click();
+    }
+  }
+  
+  if(e.key === 'Escape'){
+    // Close any open modals
+    document.querySelectorAll('.modal-back.show').forEach(modal => {
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    });
+  }
+});
+
+// Initialize the app
+initialize();
+
+/* End of enhanced script */
+</script>
+</body>
+</html>
