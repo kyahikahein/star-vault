@@ -17,7 +17,7 @@ to get the retro vibes, check these previews (recommended video bg mode):
 
 - **default ui** (typing area + archive)  
   ![preview-normal](preview-normal.png)
-- **background video aesthetic** (or gif simulation)  
+- **background video aesthetic**  
   ![preview-video](preview-video.png)
 - **pin security modal**  
   ![preview-pin](preview-pin.png)
