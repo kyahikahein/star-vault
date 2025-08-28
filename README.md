@@ -1,6 +1,6 @@
 # typewriter of secrets — star vault
 
-![logo](logo.png)
+<img src="logo.png" alt="logo" width="150" />
 
 hey! welcome to my calm, retro typewriter web app.  
 you can write short secrets, lock each one with a 4-digit pin, and keep them safe locally.  
@@ -13,7 +13,7 @@ you can write short secrets, lock each one with a 4-digit pin, and keep them saf
 
 ## previews
 
-to get the retro vibes, check these previews (animated gifs recommended for video feel):
+to get the retro vibes, check these previews (recommended video bg mode):
 
 - **default ui** (typing area + archive)  
   ![preview-normal](preview-normal.png)
@@ -21,14 +21,11 @@ to get the retro vibes, check these previews (animated gifs recommended for vide
   ![preview-video](preview-video.png)
 - **pin security modal**  
   ![preview-pin](preview-pin.png)
-
-> note: github markdown can't autoplay videos, so we use images/gifs for aesthetic experience.
-
 ---
 
 ## features
 
-- ✍️ type short secrets (~280 chars)  
+- ✍️ type short secrets (~500 chars)  
 - 🔐 lock each secret with a 4-digit pin  
 - ✨ scrambled glyph preview in archive (mysterious orbs)  
 - 🔓 unlock via keypad modal, burn to delete permanently  
