@@ -579,9 +579,52 @@ textarea#secret:focus{
   outline: 2px solid var(--teal);
   outline-offset: 2px;
 }
+
+.footer {
+    width: 100%;
+    text-align: center;
+    padding: 8px 0;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    position: fixed; /* always at bottom */
+    left: 0;
+    bottom: 10px; /* a little padding from bottom */
+    z-index: 1000;
+    color: #8EE3F5; /* cyan glow */
+    text-shadow: 0 0 4px rgba(142, 227, 245, 0.8);
+}
+
+/* mobile */
+@media (max-width: 768px) {
+    .footer {
+        font-size: 10px;
+    }
+}
+
+/* smooth global animations */
+*,
+*::before,
+*::after {
+    transition: all 0.3s ease-in-out !important; /* smooths hover/transform/opacity changes */
+    animation-timing-function: ease-in-out !important; /* makes keyframe animations smoother */
+}
+
+/* optional: reduce motion for better feel */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+
 </style>
 </head>
 <body>
+<footer class="footer">
+    made with ❤️ by haku © 2025
+</footer>
+
 
 <canvas id="bgCanvas" aria-hidden="true"></canvas>
 <video id="bgVideo" muted loop playsinline aria-hidden="true">
@@ -1528,6 +1571,9 @@ document.addEventListener('keydown', (e)=>{
 initialize();
 
 /* End of enhanced script */
+
+
 </script>
+
 </body>
 </html>
